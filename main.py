@@ -149,7 +149,7 @@ async def actualizar_autor(id: int, autor_actualizado: AutorBaseModel):
 
     return {
         "id": autor.id,
-        "nomrbre": autor.nombre,
+        "nombre": autor.nombre,
         "mensaje": "Autor actualizado con exito"
     }
 
@@ -164,7 +164,7 @@ async def eliminar_autor(id: int):
 
     return {
         "id": autor.id,
-        "nomrbre": autor.nombre,
+        "nombre": autor.nombre,
         "mensaje": "Autor eliminado con exito"
     }
 
