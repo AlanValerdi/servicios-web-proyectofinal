@@ -50,7 +50,8 @@ async def about():
     return {"message": "API para administrar una libreria"}
 
 
-# Usuario
+# USUARIO
+#FUNCION POST
 @app.post("/usuario")
 async def crear_usuario(usuario: UsuarioBaseModel):
 
@@ -60,6 +61,54 @@ async def crear_usuario(usuario: UsuarioBaseModel):
     )
 
     return {"usuario_id": usuario.id}
+
+#FUNCION GET
+@app.get("/usuario/{id}")
+async def obtener_usuario(id: int):
+    usuario = Usuario.get_or_none(Usuario.id == id)
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {"id":usuario.id, "nombre":usuario.nombre}
+
+#FUNCION GET USUARIOS
+@app.get("/usuarios")
+async def obtener_usuarios():
+    usuarios = Usuario.select()
+
+    return [
+        {"id": usuario.id, "nombre": usuario.nombre}
+        for usuario in usuarios
+    ]
+#FUNCION PUT
+@app.put("/usuario/{id}")
+async def actualizar_usuario(id: int,usuario_actualizado: UsuarioBaseModel):
+    usuario = Usuario.get_or_none(Usuario.id == id)
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.nombre = usuario_actualizado.nombre
+    usuario.password = usuario_actualizado.password
+    usuario.save()
+
+    return {
+        "id": usuario.id,
+        "nombre": usuario.nombre,
+        "mensaje": "Usuario actualizado con exito"
+    }
+#FUNCION DELETE
+@app.delete("/usuario/{id}")
+async def eliminar_usuario(id: int):
+    usuario = Usuario.get_or_none(Usuario.id == id)
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.delete_instance()
+
+    return {
+        "id": usuario.id,
+        "nombre": usuario.nombre,
+        "mensaje": "Usuario eliminado con exito"
+    }
 
 # Autor
 # POST
@@ -76,7 +125,7 @@ async def crear_autor(autor: AutorBaseModel):
 async def obtener_autor(id: int):
     autor = Autor.get_or_none(Autor.id == id)
     if autor is None:
-        raise HTTPException(status_code=404, detail="Autor no econtrado")
+        raise HTTPException(status_code=404, detail="Autor no encontrado")
     return {"id": autor.id, "nombre_autor": autor.nombre}
 
 @app.get("/autores")
@@ -93,7 +142,7 @@ async def obtener_autores():
 async def actualizar_autor(id: int, autor_actualizado: AutorBaseModel):
     autor = Autor.get_or_none(Autor.id == id)
     if autor is None:
-        raise HTTPException(status_code=404, detail="Autor no econtrado")
+        raise HTTPException(status_code=404, detail="Autor no encontrado")
 
     autor.nombre = autor_actualizado.nombre
     autor.save()
@@ -109,7 +158,7 @@ async def actualizar_autor(id: int, autor_actualizado: AutorBaseModel):
 async def eliminar_autor(id: int):
     autor = Autor.get_or_none(Autor.id == id)
     if autor is None:
-        raise HTTPException(status_code=404, detail="Autor no econtrado")
+        raise HTTPException(status_code=404, detail="Autor no encontrado")
 
     autor.delete_instance()
 
@@ -120,4 +169,5 @@ async def eliminar_autor(id: int):
     }
 
 
-# Libro 
+# Libro
+

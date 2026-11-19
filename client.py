@@ -1,5 +1,6 @@
 import requests
 from menus.autor import mostrar_menu_autor
+from menus.usuario import  mostrar_menu_usuario
 from menus.utils import pedir_opcion
 
 iterador: int = 0
@@ -17,7 +18,7 @@ while iterador != 5:
     elif iterador == 3:
         pass
     elif iterador == 4:
-        pass
+        mostrar_menu_usuario()
     
 
 print("\n Has salido del programa \n")
