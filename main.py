@@ -10,14 +10,14 @@ from database import Usuario, Libro, Prestamo, Autor
 from fastapi import FastAPI
 from uvicorn import lifespan
 
-from schemas import UsuarioBaseModel
+from schemas import UsuarioBaseModel, AutorBaseModel
 
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI):
     print("El servidor está iniciando...")
     if connection.connect(reuse_if_open=True):
         print("Conexión con la base de datos exitosa")
-        # connection.create_tables([Usuario, Libro, Prestamo, Autor])
+        connection.create_tables([Usuario, Libro, Prestamo, Autor])
 
     else:
         print("Algo salió mal con la base de datos")
@@ -60,4 +60,14 @@ async def crear_usuario(usuario: UsuarioBaseModel):
     )
 
     return {"usuario_id": usuario.id}
+
+# Autor
+@app.post('/autor')
+async def crear_autor(autor: AutorBaseModel):
+
+    autor = Autor.create(
+        nombre = autor.nombre
+    )
+
+    return {"nombre_autor": autor.nombre}
 
