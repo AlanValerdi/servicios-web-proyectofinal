@@ -6,3 +6,12 @@ docker run --name mysql-dev -e MYSQL_ROOT_PASSWORD=123 -e MYSQL_DATABASE=libreri
 
 username -> root por default
 puerto por default -> 3306 (cambiar puerto si hay problema, PUERTOLOCAL:PUERTODOCKER)
+
+# CRREACION DE CONTRATOS
+schemas.py
+
+# CREACION DE ENDPOINTS 
+main.py
+
+# PRUEBA DE ENDPOINTS
+http://127.0.0.1:8000/docs/

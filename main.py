@@ -7,7 +7,7 @@ from peewee import Model, CharField, DateTimeField, IntegerField, PrimaryKeyFiel
 from database import database as connection
 from database import Usuario, Libro, Prestamo, Autor
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from uvicorn import lifespan
 
 from schemas import UsuarioBaseModel, AutorBaseModel
@@ -39,7 +39,7 @@ app = FastAPI(
 
 # Deprecado
 # @app.on_event("startup")
-
+# @app.on_ecent("shutdown")
 
 @app.get("/")
 async def root():
@@ -62,12 +62,62 @@ async def crear_usuario(usuario: UsuarioBaseModel):
     return {"usuario_id": usuario.id}
 
 # Autor
+# POST
 @app.post('/autor')
 async def crear_autor(autor: AutorBaseModel):
 
     autor = Autor.create(
         nombre = autor.nombre
     )
+    return {"id_autor": autor.id ,"nombre_autor": autor.nombre}
 
-    return {"nombre_autor": autor.nombre}
+# GET
+@app.get("/autor/{id}")
+async def obtener_autor(id: int):
+    autor = Autor.get_or_none(Autor.id == id)
+    if autor is None:
+        raise HTTPException(status_code=404, detail="Autor no econtrado")
+    return {"id": autor.id, "nombre_autor": autor.nombre}
 
+@app.get("/autores")
+async def obtener_autores():
+    autores = Autor.select()
+
+    return [
+        {"id": autor.id, "nombre": autor.nombre}
+        for autor in autores
+    ]
+
+# PUT
+@app.put("/autor/{id}")
+async def actualizar_autor(id: int, autor_actualizado: AutorBaseModel):
+    autor = Autor.get_or_none(Autor.id == id)
+    if autor is None:
+        raise HTTPException(status_code=404, detail="Autor no econtrado")
+
+    autor.nombre = autor_actualizado.nombre
+    autor.save()
+
+    return {
+        "id": autor.id,
+        "nomrbre": autor.nombre,
+        "mensaje": "Autor actualizado con exito"
+    }
+
+# DELETE
+@app.delete("/autor/{id}")
+async def eliminar_autor(id: int):
+    autor = Autor.get_or_none(Autor.id == id)
+    if autor is None:
+        raise HTTPException(status_code=404, detail="Autor no econtrado")
+
+    autor.delete_instance()
+
+    return {
+        "id": autor.id,
+        "nomrbre": autor.nombre,
+        "mensaje": "Autor eliminado con exito"
+    }
+
+
+# Libro 

@@ -1,3 +1,5 @@
+# CREAR CONTRATOS
+
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -9,3 +11,4 @@ class UsuarioBaseModel(BaseModel):
 
 class AutorBaseModel(BaseModel):
     nombre: str  
+    
