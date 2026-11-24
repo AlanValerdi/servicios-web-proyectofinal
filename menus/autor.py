@@ -3,7 +3,7 @@ from menus.utils import URL_SERVER, pedir_opcion, pedir_id
 import requests
 
 def mostrar_autor():
-    id = pedir_id(" \n Ingresa el ID del autor del que quieres obtner información: \n")
+    id = pedir_id(" \n Ingresa el ID del autor del que quieres obtener información: \n")
 
     respuesta = requests.get(f"{URL_SERVER}/autor/{id}")
 

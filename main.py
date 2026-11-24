@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import process_time_ns
 
 from peewee import Model, CharField, DateTimeField, IntegerField, PrimaryKeyField
@@ -10,7 +10,7 @@ from database import Usuario, Libro, Prestamo, Autor
 from fastapi import FastAPI, HTTPException
 from uvicorn import lifespan
 
-from schemas import UsuarioBaseModel, AutorBaseModel
+from schemas import UsuarioBaseModel, AutorBaseModel, PrestamoBaseModel
 
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI):
@@ -169,5 +169,122 @@ async def eliminar_autor(id: int):
     }
 
 
-# Libro
+# Prestamos
+@app.post("/prestamo")
+async def crear_prestamo(prestamo: PrestamoBaseModel):
 
+
+    if Usuario.get_or_none(Usuario.id == prestamo.usuario) is None:
+        raise HTTPException(status_code=404, detail="Id del usuario no encontrado")
+
+    libro = Libro.get_or_none(Libro.id == prestamo.libro)
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Id del libro no encontrado")
+    
+    if libro.cantidad <= 0:
+        raise HTTPException(status_code=409, detail="El libro ya no tiene existencias")
+    
+    ya_prestado = Prestamo.get_or_none(
+            (Prestamo.libro == prestamo.libro) &
+            (Prestamo.usuario == prestamo.usuario) &
+            (Prestamo.activo == True)
+        )
+    
+    if ya_prestado is not None:
+        raise HTTPException(status_code=409, detail=" El usuario ya tiene activo un prestamo de este libro")
+
+    
+    nuevo_prestamo = Prestamo.create(
+        usuario = prestamo.usuario,
+        libro = prestamo.libro,
+        actualizado_en = datetime.now(),
+        activo = True,
+        fecha_limite = datetime.now() + timedelta(weeks=2),
+        fecha_devolucion = None,
+    )
+
+    libro.cantidad -= 1
+    libro.save()
+
+    return {"id_prestamo": nuevo_prestamo.id, "id_usuario": nuevo_prestamo.usuario, "fecha_limite": nuevo_prestamo.fecha_limite, "mensaje": "Prestamo Creado Correctamente"}
+
+@app.patch("/prestamo/{id}/renovar")
+async def renovar_prestamo(id: int):
+
+    prestamo = Prestamo.get_or_none(Prestamo.id == id)
+    if prestamo is None:
+        raise HTTPException(status_code=404, detail="El prestamo no se ha encontrado")
+
+    if prestamo.activo is False:
+        raise HTTPException(status_code=409, detail="El prestamo que se ha intentado renovar ya no se encuentra activo")
+
+    fecha_anterior = prestamo.fecha_limite
+    prestamo.fecha_limite += timedelta(weeks=1)
+    prestamo.save()
+
+    return{"id": prestamo.id, "libro": prestamo.libro, "usuario": prestamo.usuario, "fecha_anterior": fecha_anterior, "nueva_fecha": prestamo.fecha_limite, "mensaje": "Prestamo renovado correctamente"}
+
+@app.patch("/prestamo/{id}/devolver")
+async def devolver_prestamo(id: int):
+
+    prestamo = Prestamo.get_or_none(Prestamo.id == id)
+    if prestamo is None:
+        raise HTTPException(status_code=404, detail="El prestamo no se ha encontrado")
+
+    if prestamo.activo is False:
+        raise HTTPException(status_code=409, detail="El prestamo que se ha intentado devolver ya no se encuentra activo")
+    
+    libro = Libro.get_or_none(Libro.id == prestamo.libro_id)
+    if libro is None:
+        raise HTTPException(status_code=404, detail="El libro no se ha encontrado")
+    
+
+    prestamo.activo = False
+    prestamo.fecha_devolucion = datetime.now()
+    prestamo.actualizado_en = datetime.now()
+    prestamo.save()
+
+    libro.cantidad += 1
+    libro.save()
+
+    return{
+        "id": prestamo.id,
+        "id_libro": prestamo.libro,
+        "id_usuario": prestamo.usuario,
+        "mensaje": "Prestamo de devuelto con exito"
+    }
+
+
+@app.get("/prestamo/{id}")
+async def obtener_prestamo(id: int):
+    prestamo = Prestamo.get_or_none(Prestamo.id == id)
+    if prestamo is None:
+        raise HTTPException(status_code=404, detail="El prestamo no se ha encontrado")
+
+    return{
+        "id": prestamo.id,
+        "libro": prestamo.libro, 
+        "usuario": prestamo.usuario, 
+        "fecha_limite": prestamo.fecha_limite, 
+        "activo": prestamo.activo, 
+        "fecha_devolucion": prestamo.fecha_devolucion
+    }
+
+
+@app.get("/prestamos")
+async def obtener_prestamos():
+
+    prestamos = Prestamo.select()
+
+    return [
+        {"id": prestamo.id, 
+         "libro": prestamo.libro, 
+         "usuario": prestamo.usuario, 
+         "fecha_limite": prestamo.fecha_limite, 
+         "activo": prestamo.activo, 
+         "fecha_devolucion": prestamo.fecha_devolucion}
+        for prestamo in prestamos
+    ]
+
+
+    

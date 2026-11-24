@@ -10,4 +10,8 @@ class UsuarioBaseModel(BaseModel):
 
 class AutorBaseModel(BaseModel):
     nombre: str  
+
+class PrestamoBaseModel(BaseModel):
+    usuario: int
+    libro: int
     

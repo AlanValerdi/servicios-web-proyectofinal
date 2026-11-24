@@ -1,6 +1,7 @@
 import requests
 from menus.autor import mostrar_menu_autor
 from menus.usuario import  mostrar_menu_usuario
+from menus.prestamos import mostrar_menu_prestamo
 from menus.utils import pedir_opcion
 
 iterador: int = 0
@@ -16,7 +17,7 @@ while iterador != 5:
     elif iterador == 2:
         mostrar_menu_autor()
     elif iterador == 3:
-        pass
+        mostrar_menu_prestamo()
     elif iterador == 4:
         mostrar_menu_usuario()
     
