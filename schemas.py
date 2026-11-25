@@ -14,4 +14,9 @@ class AutorBaseModel(BaseModel):
 class PrestamoBaseModel(BaseModel):
     usuario: int
     libro: int
-    
+
+class LibroBaseModel(BaseModel):
+    id_autor: int 
+    titulo: str
+    cantidad: int
+

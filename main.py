@@ -8,9 +8,11 @@ from database import database as connection
 from database import Usuario, Libro, Prestamo, Autor
 
 from fastapi import FastAPI, HTTPException
+
+
 from uvicorn import lifespan
 
-from schemas import UsuarioBaseModel, AutorBaseModel, PrestamoBaseModel
+from schemas import LibroBaseModel, UsuarioBaseModel, AutorBaseModel, PrestamoBaseModel
 
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI):
@@ -166,6 +168,96 @@ async def eliminar_autor(id: int):
         "id": autor.id,
         "nombre": autor.nombre,
         "mensaje": "Autor eliminado con exito"
+    }
+
+# LIBRO
+#FUNCION POST
+@app.post("/libro")
+async def crear_libro(libro: LibroBaseModel):
+
+    autor = Autor.get_or_none(Autor.id == libro.id_autor)
+
+    if autor is None:
+        raise HTTPException(status_code=404, detail="Autor no existe")
+
+    libro = Libro.create(
+        autor = autor,
+        titulo = libro.titulo,
+        cantidad = libro.cantidad
+    )
+
+    return {"id_libro": libro.id, 
+            "id_autor": autor.id,
+            "titulo": libro.titulo, 
+            "cantidad": libro.cantidad,
+            "mensaje": "Libro registrado correctamente" }
+
+#FUNCION GET
+# GET
+@app.get("/libro/{id}")
+async def obtener_libro(id: int):
+    libro = Libro.get_or_none(Libro.id == id)
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+    return {"id_libro": libro.id, 
+                "id_autor": libro.autor.id, 
+                "titulo": libro.titulo, 
+                "cantidad": libro.cantidad,}
+
+@app.get("/libros")
+async def obtener_libros():
+    libros = Libro.select()
+
+    return [
+       {"id_libro": libro.id, 
+        "id_autor": libro.autor.id, 
+        "titulo": libro.titulo, 
+        "cantidad": libro.cantidad,}
+    for libro in libros
+    ]
+# PUT
+@app.put("/libro/{id}")
+async def actualizar_libro(id: int, libro_actualizado: LibroBaseModel):
+    libro = Libro.get_or_none(Libro.id == id)
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+
+    autor = Autor.get_or_none(Autor.id == libro_actualizado.id_autor)
+    if autor is None:
+        raise HTTPException(status_code=404, detail="Autor no encontrado")
+
+    libro.titulo = libro_actualizado.titulo
+    libro.autor = autor
+    libro.cantidad = libro_actualizado.cantidad
+    libro.save()
+
+    return {
+        "id_libro": libro.id, 
+        "id_autor": libro.autor.id, 
+        "titulo": libro.titulo, 
+        "cantidad": libro.cantidad,
+        "mensaje": "Libro actualizado correctamente"
+    }
+# DELETE
+@app.delete("/libro/{id}")
+async def eliminar_libro(id: int):
+    libro = Libro.get_or_none(Libro.id == id)
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+
+    prestamo = Prestamo.select().where(Prestamo.libro == libro).exists()
+    if prestamo:
+        raise HTTPException(status_code=409, detail="No se puede eliminar el libro porque tiene prestamos asociados")
+
+
+    libro.delete_instance()
+
+    return {
+            "id_libro": libro.id, 
+            "id_autor": libro.autor.id, 
+            "titulo": libro.titulo, 
+            "cantidad": libro.cantidad,
+            "mensaje": "Libro borrado correctamente"
     }
 
 
